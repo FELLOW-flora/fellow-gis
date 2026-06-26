@@ -26,4 +26,7 @@ source("analysis/01_get_GLC_FCS30D.R")
 
 ##
 # 2 Get climate metrics
-# to be defined
+source("analysis/02_get_eayclimate.R")
+
+# 3 Merge all landscape variables
+source("analysis/03_merge.R")

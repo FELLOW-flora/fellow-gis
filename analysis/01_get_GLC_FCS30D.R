@@ -1,8 +1,18 @@
+# Script to get land cover information around a buffer
+#
+# input:
+#   raw-data/GLC_FCS30D_19852022/
+#     tiles from https://doi.org/10.5281/zenodo.8239305
+#
+# output:
+#   derived-data/GLC_FCS30D_frac.csv
+#
+#
 devtools::load_all()
 
 data_folder <- here::here("data", "raw-data", "GLC_FCS30D_19852022")
 outfolder <- here::here("data", "derived-data")
-buffer_dist <- 1000
+buffer_dist <- 1000 #1km
 
 df <- read.csv("data/raw-data/site_summary_year.csv", row.names = 1)
 pts <- vect(df, geom = c("X", "Y"), crs = "EPSG:4326")
@@ -81,53 +91,5 @@ df_out[is.na(df_out)] <- 0
 write.csv(
   cbind(df, df_out),
   file.path(outfolder, "GLC_FCS30D_frac.csv"),
-  row.names = FALSE
-)
-
-# simplify the values and calculate:
-#   percentage cover of crops (10,11,12,20)
-#   percentage cover of grasslands (130)
-#   percentage cover of woody natural habitats (50-122)
-#   percentage cover of human made classes (190,200,201,202)
-#   shanon diversity of land use cover (considering all categories also crops)
-
-df_out <- read.csv(file.path(outfolder, "GLC_FCS30D_frac.csv"))
-df_out <- df_out[!names(df_out) %in% names(df)]
-df_out <- df_out[!names(df_out) %in% "frac_0"]
-
-codeC <- gsub("frac_", "", names(df_out))
-
-crop_cat <- c("10", "11", "12", "20")
-grass_cat <- "130"
-woody_cat <- as.character(50:122)
-human_cat <- "190"
-
-land_cover <- data.frame(
-  "frac_crop" = rowSums(df_out[, codeC %in% crop_cat]),
-  "frac_grassland" = df_out[, codeC %in% grass_cat],
-  "frac_woody" = rowSums(df_out[, codeC %in% woody_cat]),
-  "frac_humanmade" = df_out[, codeC %in% human_cat]
-)
-land_cover <- round(land_cover * 100, 3)
-
-grpC <- as.numeric(codeC) %/% 10
-df_gp <- t(rowsum(t(df_out), grpC, na.rm = TRUE))
-
-# grpC2 <- cut(
-#   as.numeric(codeC),
-#   breaks = c(0, 30, 125, 135, 160, 189, 195, 205, 2030, 255)
-# )
-# df_gp2 <- t(rowsum(t(df_out), grpC2, na.rm = TRUE))
-
-shannon <- data.frame(
-  "shannon_C35" = vegan::diversity(df_out, "shannon"),
-  "shannon_C15" = vegan::diversity(df_gp, "shannon")
-)
-
-shannon <- round(shannon, 4)
-
-write.csv(
-  cbind(df, land_cover, shannon),
-  file.path(outfolder, "metrics_LULC.csv"),
   row.names = FALSE
 )
