@@ -39,7 +39,7 @@ source("analysis/02_get_eayclimate.R")
 source("analysis/03_merge.R")
 ```
 
-![Correlation among variables](figure/Corr_Landscape_metrics.png){width=80%}
+![Correlation among variables](figure/Corr_Landscape_metrics.png)
 
 
 ## Metrics definition
